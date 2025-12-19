@@ -58,11 +58,35 @@ window.fbAsyncInit = function () {
 function statusChangeCallback(response) {
     console.log('statusChangeCallback');
     console.log(response);
-    // The response object is returned with a status field that lets the
-    // app know the current login status of the person.
+
     if (response.status === 'connected') {
-        // Logged into your app and Facebook.
+        // Logged into your app and Facebook (Classic Flow with Token)
         testAPI();
+    } else if (response.authResponse && response.authResponse.code) {
+        // Business Flow returning Code (No Token available for Client-side API)
+        // We cannot call FB.api('/me') without a token.
+        console.log('Received Auth Code:', response.authResponse.code);
+
+        const profileContent = `
+            <div class="user-info">
+                <h3>Login Successful (Code Flow)</h3>
+                <p style="color: #ccc; font-size: 0.9em; margin-top: 10px;">
+                    Code received! <br>
+                    <span style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">
+                        ${response.authResponse.code.substring(0, 20)}...
+                    </span>
+                </p>
+                <div style="margin-top: 15px; font-size: 0.8em; opacity: 0.8; background: #333; padding: 10px; border-radius: 8px;">
+                    <strong>Note:</strong> Your app requires a Backend to exchange this code for an Access Token. 
+                    Client-side API calls are disabled in this mode.
+                </div>
+            </div>
+        `;
+        document.getElementById('status').innerHTML = profileContent;
+        // Adjust UI
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('profile-section').classList.remove('hidden');
+
     } else {
         // Not logged into your app or we are unable to tell.
         updateUI_NotLoggedIn();
@@ -108,13 +132,17 @@ function updateUI_NotLoggedIn() {
 
 // Custom Login Button Handler (for the "Pretty" button)
 function customLogin() {
-    // If we have a Config ID, use it (Business Login). Otherwise fallback to scope (Classic Login).
-    const opts = FACEBOOK_CONFIG_ID ? { config_id: FACEBOOK_CONFIG_ID } : { scope: 'public_profile' };
+    // If we have a Config ID, use it (Business Login) and force 'code' flow (required by some Business Apps).
+    // Otherwise fallback to scope (Classic Login).
+    const opts = FACEBOOK_CONFIG_ID
+        ? { config_id: FACEBOOK_CONFIG_ID, response_type: 'code', override_default_response_type: true }
+        : { scope: 'public_profile' };
 
     console.log('Logging in with options:', opts);
 
     FB.login(function (response) {
-        if (response.status === 'connected') {
+        console.log('Login Response:', response);
+        if (response.status === 'connected' || (response.authResponse && response.authResponse.code)) {
             statusChangeCallback(response);
         } else {
             console.log('User cancelled login or did not fully authorize.');
