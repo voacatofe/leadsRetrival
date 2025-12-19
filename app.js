@@ -55,43 +55,125 @@ window.fbAsyncInit = function () {
 
 
 // 3. Callback function to handle login response
-function statusChangeCallback(response) {
-    console.log('statusChangeCallback');
-    console.log(response);
+async function statusChangeCallback(response) {
+    console.log('statusChangeCallback', response);
 
     if (response.status === 'connected') {
-        // Logged into your app and Facebook (Classic Flow with Token)
+        // Classic Token Flow (should not happen with config_id)
         testAPI();
     } else if (response.authResponse && response.authResponse.code) {
-        // Business Flow returning Code (No Token available for Client-side API)
-        // We cannot call FB.api('/me') without a token.
-        console.log('Received Auth Code:', response.authResponse.code);
+        // Code Flow - Exchange Code for Token via Backend
+        const code = response.authResponse.code;
+        console.log('Code received. Exchanging for token...');
 
-        const profileContent = `
-            <div class="user-info">
-                <h3>Login Successful (Code Flow)</h3>
-                <p style="color: #ccc; font-size: 0.9em; margin-top: 10px;">
-                    Code received! <br>
-                    <span style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">
-                        ${response.authResponse.code.substring(0, 20)}...
-                    </span>
-                </p>
-                <div style="margin-top: 15px; font-size: 0.8em; opacity: 0.8; background: #333; padding: 10px; border-radius: 8px;">
-                    <strong>Note:</strong> Your app requires a Backend to exchange this code for an Access Token. 
-                    Client-side API calls are disabled in this mode.
-                </div>
-            </div>
-        `;
-        document.getElementById('status').innerHTML = profileContent;
-        // Adjust UI
+        document.getElementById('status').innerHTML = 'Authenticating with backend...';
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('profile-section').classList.remove('hidden');
 
+        try {
+            // Exchange Code
+            const res = await fetch('/api/exchange-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Success! We have the token in the backend/response.
+            const user = data.user;
+            const accessToken = data.access_token;
+
+            // Show User Profile
+            renderProfile(user);
+
+            // Fetch Pages automatically
+            fetchPages(accessToken);
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('status').innerHTML = `<p style="color:red">Error: ${error.message}</p> <button class="btn btn-logout" onclick="customLogout()">Try Again</button>`;
+        }
     } else {
-        // Not logged into your app or we are unable to tell.
         updateUI_NotLoggedIn();
     }
 }
+
+function renderProfile(user) {
+    const profileContent = `
+        <div class="user-info">
+            <img src="${user.picture?.data?.url}" alt="${user.name}">
+            <h3>${user.name}</h3>
+            <p>ID: ${user.id}</p>
+        </div>
+        <div id="pages-container" style="margin-top: 20px; text-align: left;">
+            <h4>Loading Pages...</h4>
+        </div>
+    `;
+    document.getElementById('status').innerHTML = profileContent;
+}
+
+async function fetchPages(accessToken) {
+    try {
+        const res = await fetch(`/api/pages?access_token=${accessToken}`);
+        const data = await res.json();
+
+        if (data.data && data.data.length > 0) {
+            let html = `<h4>Select a Page:</h4><div class="pages-list">`;
+            data.data.forEach(page => {
+                html += `
+                    <div class="page-item" onclick="fetchLeads('${page.access_token}', '${page.id}', '${page.name}')">
+                        <strong>${page.name}</strong><br>
+                        <small>${page.category}</small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('pages-container').innerHTML = html;
+        } else {
+            document.getElementById('pages-container').innerHTML = '<p>No pages found. (Check permissions)</p>';
+        }
+    } catch (e) {
+        document.getElementById('pages-container').innerHTML = `<p style="color:red">Failed to load pages: ${e.message}</p>`;
+    }
+}
+
+async function fetchLeads(pageToken, pageId, pageName) {
+    document.getElementById('pages-container').innerHTML = `<h4>Loading forms for ${pageName}...</h4>`;
+
+    try {
+        const res = await fetch(`/api/leads?page_token=${pageToken}&page_id=${pageId}`);
+        const data = await res.json();
+
+        // This endpoint returns LeadGen Forms
+        let html = `<h4>Lead Forms - ${pageName}</h4>`;
+        html += `<button class="btn" style="padding:5px 10px; font-size:0.8rem; margin-bottom:10px" onclick="location.reload()">Back</button>`;
+
+        if (data.data && data.data.length > 0) {
+            data.data.forEach(form => {
+                html += `
+                    <div class="page-item" style="cursor: default;">
+                        <strong>${form.name}</strong> (${form.status})<br>
+                        <small>Leads Count: ${form.leads_count || 0}</small><br>
+                        <small>ID: ${form.id}</small>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<p>No lead forms found.</p>';
+        }
+
+        document.getElementById('pages-container').innerHTML = html;
+
+    } catch (e) {
+        alert("Error fetching leads: " + e.message);
+    }
+}
+
 
 // 4. Wrapper for the onlogin attribute (User Requested Snippet)
 function checkLoginState() {

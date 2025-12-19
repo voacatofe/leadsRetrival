@@ -1,35 +1,32 @@
-# Stage 1: Build
+# Build Stage
 FROM node:20-alpine as builder
-
 WORKDIR /app
-
-# Copy package files
-COPY package.json ./
-
-# Install dependencies
+COPY package*.json ./
 RUN npm install
-
-# Copy source code
 COPY . .
+# Vite build puts files in /dist
+RUN npm run build 
 
-# Build the app
-RUN npm run build
+# Production Stage
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
 
-# Stage 2: Serve
-FROM nginx:alpine
+# Copy backend files
+COPY server.js .
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy frontend build from builder
+COPY --from=builder /app/dist ./dist
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Copy entrypoint (optional, if we still need runtime injection for frontend)
+# Since we are now serving from Node, we can inject variables differently or keep the script.
+# For simplicity, let's keep the script pattern if we want window.env, 
+# OR we can serve a dynamic /env-config.js endpoint from Express!
+# Let's switch to the Express endpoint approach, it's cleaner. 
+# But for now, standard environment variables passed to Node are enough for the Backend.
+# For the Frontend to see VITE_ vars, we still need the injection if we want runtime config.
+# Let's stick to standard node command for now and assume variables are present.
 
-# Expose web port
-EXPOSE 80
-
-# Use the entrypoint script specifically
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+CMD ["node", "server.js"]

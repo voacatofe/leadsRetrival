@@ -64,14 +64,45 @@ body {
     animation: moveBlob2 15s infinite alternate;
 }
 
+.pages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.page-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: left;
+}
+
+.page-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 @keyframes moveBlob1 {
-    from { transform: translate(0, 0); }
-    to { transform: translate(100px, 100px); }
+    from {
+        transform: translate(0, 0);
+    }
+
+    to {
+        transform: translate(100px, 100px);
+    }
 }
 
 @keyframes moveBlob2 {
-    from { transform: translate(0, 0); }
-    to { transform: translate(-100px, -100px); }
+    from {
+        transform: translate(0, 0);
+    }
+
+    to {
+        transform: translate(-100px, -100px);
+    }
 }
 
 /* Glass Card */
