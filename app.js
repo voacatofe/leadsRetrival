@@ -257,3 +257,4 @@ function customLogout() {
 window.customLogin = customLogin;
 window.customLogout = customLogout;
 window.checkLoginState = checkLoginState;
+window.fetchLeads = fetchLeads;
