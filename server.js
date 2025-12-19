@@ -15,11 +15,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from 'dist' (production) or root (dev fallback if needed)
-// Serve static files from 'dist' (production) or root (dev fallback if needed)
-app.use(express.static('dist'));
+app.use(express.json());
 
-// Dynamic Env Config for Frontend (Replaces docker-entrypoint.sh)
+// Dynamic Env Config for Frontend (Must be before static files)
 app.get('/env-config.js', (req, res) => {
     const env = {
         VITE_FACEBOOK_APP_ID: process.env.VITE_FACEBOOK_APP_ID || process.env.FACEBOOK_APP_ID,
@@ -28,6 +26,9 @@ app.get('/env-config.js', (req, res) => {
     res.set('Content-Type', 'application/javascript');
     res.send(`window.env = ${JSON.stringify(env)};`);
 });
+
+// Serve static files from 'dist' (production) or root (dev fallback if needed)
+app.use(express.static('dist'));
 
 // API Routes
 app.post('/api/exchange-token', async (req, res) => {
