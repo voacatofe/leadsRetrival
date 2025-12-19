@@ -76,6 +76,11 @@ async function statusChangeCallback(response) {
                     return;
                 }
                 renderProfile(profileRes);
+
+                // Show Logout Button / Profile Section
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('profile-section').classList.remove('hidden');
+
                 // Fetch pages with this token
                 fetchPages(accessToken);
             });
