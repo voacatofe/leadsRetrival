@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "80:80"
+    # Ensure .env is read if we want to support runtime overrides (for some setups)
+    # but primarily Vite bakes them in at build time.
