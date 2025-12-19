@@ -73,14 +73,13 @@ function testAPI() {
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('profile-section').classList.remove('hidden');
 
-    FB.api('/me', { fields: 'name, email, picture.width(150).height(150)' }, function (response) {
+    FB.api('/me', { fields: 'name, picture.width(150).height(150)' }, function (response) {
         console.log('Successful login for: ' + response.name);
 
         const profileContent = `
             <div class="user-info">
                 <img src="${response.picture.data.url}" alt="${response.name}">
                 <h3>${response.name}</h3>
-                <p style="color: #ccc; font-size: 0.8em; margin-top: 5px;">${response.email || 'No email permission'}</p>
                 <div style="margin-top: 10px; font-size: 0.7em; word-break: break-all; opacity: 0.6;">
                     ID: ${response.id}
                 </div>
@@ -104,7 +103,7 @@ function customLogin() {
         } else {
             console.log('User cancelled login or did not fully authorize.');
         }
-    }, { scope: 'public_profile,email' });
+    }, { scope: 'public_profile' });
 }
 
 // Custom Logout Handler
