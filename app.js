@@ -3,8 +3,9 @@
  * Contains the snippets requested by the user and additional logic to handle UI.
  */
 
-// Accessing the ID from the .env file (Requires Vite)
-const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
+// Accessing the ID from Runtime (Docker) OR Build Time (Vite)
+// Priority: window.env (Production/Docker) > import.meta.env (Local Dev)
+const FACEBOOK_APP_ID = (window.env && window.env.VITE_FACEBOOK_APP_ID) || import.meta.env.VITE_FACEBOOK_APP_ID;
 
 if (!FACEBOOK_APP_ID || FACEBOOK_APP_ID === 'YOUR_APP_ID_HERE') {
     console.error("⚠️ FACEBOOK_APP_ID is missing! Check your .env file.");
