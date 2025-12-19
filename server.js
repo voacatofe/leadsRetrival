@@ -16,7 +16,18 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from 'dist' (production) or root (dev fallback if needed)
+// Serve static files from 'dist' (production) or root (dev fallback if needed)
 app.use(express.static('dist'));
+
+// Dynamic Env Config for Frontend (Replaces docker-entrypoint.sh)
+app.get('/env-config.js', (req, res) => {
+    const env = {
+        VITE_FACEBOOK_APP_ID: process.env.VITE_FACEBOOK_APP_ID || process.env.FACEBOOK_APP_ID,
+        VITE_FACEBOOK_CONFIG_ID: process.env.VITE_FACEBOOK_CONFIG_ID || process.env.FACEBOOK_CONFIG_ID
+    };
+    res.set('Content-Type', 'application/javascript');
+    res.send(`window.env = ${JSON.stringify(env)};`);
+});
 
 // API Routes
 app.post('/api/exchange-token', async (req, res) => {
