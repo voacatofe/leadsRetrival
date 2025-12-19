@@ -12,9 +12,8 @@ if (!FACEBOOK_APP_ID || FACEBOOK_APP_ID === 'YOUR_APP_ID_HERE') {
     alert("⚠️ Please set your VITE_FACEBOOK_APP_ID in the .env file!");
 }
 
-// Use a recent version. v20.0 is safe and recent enough as of late 2024/2025 context.
-// User requested '{api-version}' which usually implies latest handling or specific.
-const FACEBOOK_API_VERSION = 'v20.0';
+// Use a recent version. Checked by user: v24.0 is available.
+const FACEBOOK_API_VERSION = 'v24.0';
 
 // 1. Initialize SDK (User Requested Snippet Structure)
 window.fbAsyncInit = function () {
