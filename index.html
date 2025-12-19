@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Login Test</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Ambient Background -->
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <div class="glass-card">
+            <h1>FB Login Test</h1>
+            <p class="subtitle">Secure & Stylish Authentication</p>
+
+            <!-- Status / Profile Display -->
+            <div id="status">
+                Loading SDK...
+            </div>
+
+            <!-- Login Section -->
+            <div id="login-section" class="hidden">
+                <!-- Custom "Pretty" Button -->
+                <button class="btn btn-facebook" onclick="customLogin()">
+                    Using FB.login()
+                </button>
+
+                <!-- Official Button (Requested by User) -->
+                <div class="fb-btn-wrapper">
+                    <p style="font-size: 0.8rem; margin-bottom: 10px; opacity: 0.6;">Or use official button:</p>
+                    <fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
+                    </fb:login-button>
+                </div>
+            </div>
+
+            <!-- Profile / Logout Section -->
+            <div id="profile-section" class="hidden">
+                <button class="btn btn-logout" onclick="customLogout()">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>

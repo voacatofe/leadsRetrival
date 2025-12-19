@@ -1,0 +1,199 @@
+/* Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --text-color: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --fb-blue: #1877F2;
+    --fb-hover: #166fe5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background: #0f0c29;
+    background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: var(--text-color);
+}
+
+/* Background Blobs for Atmosphere */
+.background-blobs {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+}
+
+.blob-1 {
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: #764ba2;
+    animation: moveBlob1 20s infinite alternate;
+}
+
+.blob-2 {
+    bottom: -100px;
+    right: -100px;
+    width: 350px;
+    height: 350px;
+    background: #667eea;
+    animation: moveBlob2 15s infinite alternate;
+}
+
+@keyframes moveBlob1 {
+    from { transform: translate(0, 0); }
+    to { transform: translate(100px, 100px); }
+}
+
+@keyframes moveBlob2 {
+    from { transform: translate(0, 0); }
+    to { transform: translate(-100px, -100px); }
+}
+
+/* Glass Card */
+.container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Typography */
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+p.subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 30px;
+}
+
+/* Status Section */
+#status {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-info {
+    text-align: left;
+    width: 100%;
+}
+
+.user-info img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid white;
+    vertical-align: middle;
+}
+
+.user-info h3 {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1.1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    margin-top: 10px;
+}
+
+.btn-facebook {
+    background-color: var(--fb-blue);
+    color: white;
+}
+
+.btn-facebook:hover {
+    background-color: var(--fb-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 119, 242, 0.4);
+}
+
+.btn-logout {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid var(--glass-border);
+    margin-top: 15px;
+}
+
+.btn-logout:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Standard FB Button wrapper to make it look decent */
+.fb-btn-wrapper {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--glass-border);
+}
