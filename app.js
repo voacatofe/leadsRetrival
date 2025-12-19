@@ -152,9 +152,22 @@ function customLogin() {
 
 // Custom Logout Handler
 function customLogout() {
-    FB.logout(function (response) {
-        // Person is now logged out
-        statusChangeCallback(response);
+    console.log("Attempting logout...");
+
+    // In 'code' flow, we might not have a client-side token, so FB.logout might be confused.
+    // We check status first.
+    FB.getLoginStatus(function (response) {
+        if (response.status === 'connected') {
+            FB.logout(function (resp) {
+                console.log("Logged out via FB.logout", resp);
+                statusChangeCallback(resp);
+            });
+        } else {
+            // If the SDK thinks we aren't connected (common in code flow without cookie persistence),
+            // just force the UI to reset.
+            console.log("User not connected in SDK (Code Flow?), forcing UI reset.");
+            updateUI_NotLoggedIn();
+        }
     });
 }
 
