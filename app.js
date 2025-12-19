@@ -106,9 +106,6 @@ function updateUI_NotLoggedIn() {
     document.getElementById('profile-section').classList.add('hidden');
 }
 
-// Accessing the Config ID (Required for Business Apps)
-const FACEBOOK_CONFIG_ID = (window.env && window.env.VITE_FACEBOOK_CONFIG_ID) || import.meta.env.VITE_FACEBOOK_CONFIG_ID;
-
 // Custom Login Button Handler (for the "Pretty" button)
 function customLogin() {
     // If we have a Config ID, use it (Business Login). Otherwise fallback to scope (Classic Login).
