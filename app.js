@@ -6,6 +6,9 @@
 // Accessing the ID from Runtime (Docker) OR Build Time (Vite)
 // Priority: window.env (Production/Docker) > import.meta.env (Local Dev)
 const FACEBOOK_APP_ID = (window.env && window.env.VITE_FACEBOOK_APP_ID) || import.meta.env.VITE_FACEBOOK_APP_ID;
+// Accessing the Config ID (Required for Business Apps)
+const FACEBOOK_CONFIG_ID = (window.env && window.env.VITE_FACEBOOK_CONFIG_ID) || import.meta.env.VITE_FACEBOOK_CONFIG_ID;
+
 
 if (!FACEBOOK_APP_ID || FACEBOOK_APP_ID === 'YOUR_APP_ID_HERE') {
     console.error("⚠️ FACEBOOK_APP_ID is missing! Check your .env file.");
@@ -30,6 +33,15 @@ window.fbAsyncInit = function () {
     FB.getLoginStatus(function (response) {
         statusChangeCallback(response);
     });
+
+    // 3. Render Official Button with Config ID
+    const btnContainer = document.getElementById('official-btn-container');
+    if (btnContainer) {
+        const configAttr = FACEBOOK_CONFIG_ID ? `config_id="${FACEBOOK_CONFIG_ID}"` : 'scope="public_profile"';
+        btnContainer.innerHTML = `<fb:login-button ${configAttr} onlogin="checkLoginState();"></fb:login-button>`;
+        // Reparse XFBML to render the button
+        FB.XFBML.parse(btnContainer);
+    }
 };
 
 // Load the SDK asynchronously (User Requested Snippet)
@@ -94,15 +106,23 @@ function updateUI_NotLoggedIn() {
     document.getElementById('profile-section').classList.add('hidden');
 }
 
+// Accessing the Config ID (Required for Business Apps)
+const FACEBOOK_CONFIG_ID = (window.env && window.env.VITE_FACEBOOK_CONFIG_ID) || import.meta.env.VITE_FACEBOOK_CONFIG_ID;
+
 // Custom Login Button Handler (for the "Pretty" button)
 function customLogin() {
+    // If we have a Config ID, use it (Business Login). Otherwise fallback to scope (Classic Login).
+    const opts = FACEBOOK_CONFIG_ID ? { config_id: FACEBOOK_CONFIG_ID } : { scope: 'public_profile' };
+
+    console.log('Logging in with options:', opts);
+
     FB.login(function (response) {
         if (response.status === 'connected') {
             statusChangeCallback(response);
         } else {
             console.log('User cancelled login or did not fully authorize.');
         }
-    }, { scope: 'public_profile' });
+    }, opts);
 }
 
 // Custom Logout Handler

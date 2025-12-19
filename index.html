@@ -36,21 +36,18 @@
                     Using FB.login()
                 </button>
 
-                <!-- Official Button (Requested by User) -->
-                <div class="fb-btn-wrapper">
-                    <p style="font-size: 0.8rem; margin-bottom: 10px; opacity: 0.6;">Or use official button:</p>
-                    <fb:login-button scope="public_profile" onlogin="checkLoginState();">
-                    </fb:login-button>
-                </div>
-            </div>
-
-            <!-- Profile / Logout Section -->
-            <div id="profile-section" class="hidden">
-                <button class="btn btn-logout" onclick="customLogout()">
-                    Logout
-                </button>
+                <!-- Official Button (Requested by User) - Managed by JS now for Config ID support -->
+                <div id="official-btn-container"></div>
             </div>
         </div>
+
+        <!-- Profile / Logout Section -->
+        <div id="profile-section" class="hidden">
+            <button class="btn btn-logout" onclick="customLogout()">
+                Logout
+            </button>
+        </div>
+    </div>
     </div>
 
     <!-- Main Logic -->
