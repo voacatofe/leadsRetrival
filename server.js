@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.use(express.json());
 
-// Dynamic Env Config for Frontend (Must be before static files)
+// Dynamic Env Config for Frontend (Replaces docker-entrypoint.sh)
 app.get('/env-config.js', (req, res) => {
     const env = {
         VITE_FACEBOOK_APP_ID: process.env.VITE_FACEBOOK_APP_ID || process.env.FACEBOOK_APP_ID,

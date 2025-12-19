@@ -58,42 +58,9 @@ window.fbAsyncInit = function () {
 async function statusChangeCallback(response) {
     console.log('statusChangeCallback', response);
 
-    if (response.status === 'connected') {
-        console.log("User is connected. Checking for Access Token...");
-        // If we have an access token from a previous session (or hybrid flow)
-        if (response.authResponse && response.authResponse.accessToken) {
-            const accessToken = response.authResponse.accessToken;
-            const userId = response.authResponse.userID;
-
-            // Render simple profile (we might not have full info without calling API, but we have ID)
-            // We try to fetch full profile from Backend using this token? Or Client? 
-            // Let's try client side fetch for profile if possible, otherwise just show ID.
-            FB.api('/me', { fields: 'name, picture.width(150).height(150)' }, function (profileRes) {
-                if (!profileRes || profileRes.error) {
-                    // Token might be invalid or scopes changed. Force re-login.
-                    console.warn("Client profile fetch failed. Token might be stale.", profileRes);
-                    document.getElementById('status').innerHTML = '<p>Session stale. Please login again.</p>';
-                    return;
-                }
-                renderProfile(profileRes);
-
-                // Show Logout Button / Profile Section
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('profile-section').classList.remove('hidden');
-
-                // Fetch pages with this token
-                fetchPages(accessToken);
-            });
-        } else {
-            // Connected but no token (e.g. Code flow only). 
-            // We need to re-authenticate to get a new code for the backend.
-            console.log("Connected but no token. Requiring re-auth.");
-            document.getElementById('status').innerHTML = '<p>Please re-authenticate to view pages.</p>';
-            document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('profile-section').classList.add('hidden');
-        }
-
-    } else if (response.authResponse && response.authResponse.code) {
+    // 1. Check for Code Flow IMMEDIATELY (Priority)
+    // Even if status is 'connected', we might have just received a code from a fresh login.
+    if (response.authResponse && response.authResponse.code) {
         // Code Flow - Exchange Code for Token via Backend
         const code = response.authResponse.code;
         console.log('Code received. Exchanging for token...');
@@ -130,7 +97,45 @@ async function statusChangeCallback(response) {
             console.error(error);
             document.getElementById('status').innerHTML = `<p style="color:red">Error: ${error.message}</p> <button class="btn btn-logout" onclick="customLogout()">Try Again</button>`;
         }
+        return; // Stop here, we are handling the code flow.
+    }
+
+    // 2. Check for Existing Session (Token Flow / Already Connected)
+    if (response.status === 'connected') {
+        console.log("User is connected. Checking for Access Token...");
+        // If we have an access token from a previous session (or hybrid flow)
+        if (response.authResponse && response.authResponse.accessToken) {
+            const accessToken = response.authResponse.accessToken;
+            // Render simple profile (we might not have full info without calling API, but we have ID)
+            FB.api('/me', { fields: 'name, picture.width(150).height(150)' }, function (profileRes) {
+                if (!profileRes || profileRes.error) {
+                    // Token might be invalid or scopes changed. Force re-login.
+                    console.warn("Client profile fetch failed. Token might be stale.", profileRes);
+                    document.getElementById('status').innerHTML = '<p>Session stale. Please login again.</p>';
+                    return;
+                }
+                renderProfile(profileRes);
+
+                // Show Logout Button / Profile Section
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('profile-section').classList.remove('hidden');
+
+                // Fetch pages with this token
+                fetchPages(accessToken);
+            });
+        } else {
+            // Connected but no token AND no code. 
+            // This happens when the SDK remembers the user is logged in to FB, 
+            // but our app doesn't have a specific access token for the session yet (and no code returned).
+            // We need to re-authenticate to get a new code for the backend.
+            console.log("Connected but no token. Requiring re-auth.");
+            // Force UI to show login button so user can click it and get a new code
+            updateUI_NotLoggedIn();
+            document.getElementById('status').innerHTML += '<br><small>(Session expired, please log in again)</small>';
+        }
+
     } else {
+        // Not connected or unknown
         updateUI_NotLoggedIn();
     }
 }
