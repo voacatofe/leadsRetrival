@@ -113,3 +113,8 @@ function customLogout() {
         statusChangeCallback(response);
     });
 }
+
+// Expose functions to global scope for HTML onclick attributes
+window.customLogin = customLogin;
+window.customLogout = customLogout;
+window.checkLoginState = checkLoginState;
