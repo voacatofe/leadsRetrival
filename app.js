@@ -59,8 +59,35 @@ async function statusChangeCallback(response) {
     console.log('statusChangeCallback', response);
 
     if (response.status === 'connected') {
-        // Classic Token Flow (should not happen with config_id)
-        testAPI();
+        console.log("User is connected. Checking for Access Token...");
+        // If we have an access token from a previous session (or hybrid flow)
+        if (response.authResponse && response.authResponse.accessToken) {
+            const accessToken = response.authResponse.accessToken;
+            const userId = response.authResponse.userID;
+
+            // Render simple profile (we might not have full info without calling API, but we have ID)
+            // We try to fetch full profile from Backend using this token? Or Client? 
+            // Let's try client side fetch for profile if possible, otherwise just show ID.
+            FB.api('/me', { fields: 'name, picture.width(150).height(150)' }, function (profileRes) {
+                if (!profileRes || profileRes.error) {
+                    // Token might be invalid or scopes changed. Force re-login.
+                    console.warn("Client profile fetch failed. Token might be stale.", profileRes);
+                    document.getElementById('status').innerHTML = '<p>Session stale. Please login again.</p>';
+                    return;
+                }
+                renderProfile(profileRes);
+                // Fetch pages with this token
+                fetchPages(accessToken);
+            });
+        } else {
+            // Connected but no token (e.g. Code flow only). 
+            // We need to re-authenticate to get a new code for the backend.
+            console.log("Connected but no token. Requiring re-auth.");
+            document.getElementById('status').innerHTML = '<p>Please re-authenticate to view pages.</p>';
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('profile-section').classList.add('hidden');
+        }
+
     } else if (response.authResponse && response.authResponse.code) {
         // Code Flow - Exchange Code for Token via Backend
         const code = response.authResponse.code;
@@ -183,28 +210,6 @@ function checkLoginState() {
 }
 
 // --- Custom Helper Functions for UI ---
-
-function testAPI() {
-    console.log('Welcome!  Fetching your information.... ');
-    // Hide login button, show user info
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('profile-section').classList.remove('hidden');
-
-    FB.api('/me', { fields: 'name, picture.width(150).height(150)' }, function (response) {
-        console.log('Successful login for: ' + response.name);
-
-        const profileContent = `
-            <div class="user-info">
-                <img src="${response.picture.data.url}" alt="${response.name}">
-                <h3>${response.name}</h3>
-                <div style="margin-top: 10px; font-size: 0.7em; word-break: break-all; opacity: 0.6;">
-                    ID: ${response.id}
-                </div>
-            </div>
-        `;
-        document.getElementById('status').innerHTML = profileContent;
-    });
-}
 
 function updateUI_NotLoggedIn() {
     document.getElementById('status').innerHTML = 'Please log in to continue.';
