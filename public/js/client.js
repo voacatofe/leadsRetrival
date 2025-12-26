@@ -182,24 +182,12 @@ let CURRENT_USER_TOKEN = null;
 async function fetchPages(accessToken) {
     CURRENT_USER_TOKEN = accessToken;
     try {
-        console.log("Fetching pages from /auth/pages...");
-        const res = await fetch('/auth/pages', {
+        const res = await fetch('/api/auth/pages', {
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
-        
-        // Log para diagnóstico
-        console.log("Response status:", res.status);
-        const text = await res.text();
-        console.log("Raw response body (start):", text.substring(0, 100));
-
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            throw new Error(`Server returned non-JSON response (likely HTML error page). Status: ${res.status}. Content: ${text.substring(0, 50)}...`);
-        }
+        const data = await res.json();
 
         if (data.pages && data.pages.length > 0) {
             renderPagesList(data.pages);
@@ -245,7 +233,7 @@ async function loadForms(pageId, pageName) {
     container.innerHTML = `<h4>Loading forms for ${pageName}...</h4>`;
 
     try {
-        const res = await fetch(`/auth/pages/${pageId}/forms`, {
+        const res = await fetch(`/api/auth/pages/${pageId}/forms`, {
             headers: {
                 'Authorization': `Bearer ${CURRENT_USER_TOKEN}`
             }
