@@ -182,12 +182,24 @@ let CURRENT_USER_TOKEN = null;
 async function fetchPages(accessToken) {
     CURRENT_USER_TOKEN = accessToken;
     try {
+        console.log("Fetching pages from /auth/pages...");
         const res = await fetch('/auth/pages', {
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
-        const data = await res.json();
+        
+        // Log para diagnóstico
+        console.log("Response status:", res.status);
+        const text = await res.text();
+        console.log("Raw response body (start):", text.substring(0, 100));
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Server returned non-JSON response (likely HTML error page). Status: ${res.status}. Content: ${text.substring(0, 50)}...`);
+        }
 
         if (data.pages && data.pages.length > 0) {
             renderPagesList(data.pages);
