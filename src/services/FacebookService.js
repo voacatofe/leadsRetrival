@@ -55,23 +55,88 @@ class FacebookService {
   }
 
   /**
-   * Lista as páginas que o usuário administra.
-   * @param {string} accessToken 
+   * Busca páginas pertencentes a Business Managers (Agências).
+   * @param {string} accessToken
+   * @returns {Promise<Array>}
+   */
+  async getBusinessPages(accessToken) {
+    try {
+      // 1. Buscar Negócios
+      const businessesResponse = await axios.get(`${BASE_URL}/me/businesses`, {
+        params: {
+          access_token: accessToken,
+          fields: 'id,name',
+        },
+      });
+
+      const businesses = businessesResponse.data.data || [];
+      let allBusinessPages = [];
+
+      // 2. Para cada negócio, buscar client_pages
+      // Usamos Promise.all para paralelizar as chamadas
+      const promises = businesses.map(async (business) => {
+        try {
+          const pagesResponse = await axios.get(`${BASE_URL}/${business.id}/client_pages`, {
+            params: {
+              access_token: accessToken,
+              fields: 'name,access_token,id,tasks',
+            },
+          });
+          return pagesResponse.data.data || [];
+        } catch (err) {
+          console.warn(`Falha ao buscar páginas do negócio ${business.id}:`, err.message);
+          return [];
+        }
+      });
+
+      const results = await Promise.all(promises);
+      results.forEach(pages => {
+        allBusinessPages = allBusinessPages.concat(pages);
+      });
+
+      return allBusinessPages;
+
+    } catch (error) {
+      // Se falhar (ex: usuário não tem permissão de business), apenas loga e retorna vazio
+      // para não quebrar o fluxo principal de getPages
+      console.warn('Erro ao buscar Business Pages (pode ser falta de permissão ou nenhum negócio):', error.response?.data || error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Lista as páginas que o usuário administra (diretas e via Business Manager).
+   * @param {string} accessToken
    * @returns {Promise<Array>}
    */
   async getPages(accessToken) {
     try {
-      const response = await axios.get(`${BASE_URL}/me/accounts`, {
+      // 1. Busca páginas diretas (/me/accounts)
+      const directPagesPromise = axios.get(`${BASE_URL}/me/accounts`, {
         params: {
           access_token: accessToken,
           fields: 'id,name,access_token,category,tasks',
         },
+      }).then(res => res.data.data).catch(err => {
+        console.error('Erro ao obter páginas diretas:', err.message);
+        throw err;
       });
-      // Retorna o array de páginas. A paginação estaria em response.data.paging, 
-      // mas para este MVP vamos retornar a primeira página de resultados.
-      return response.data.data;
+
+      // 2. Busca páginas de Business Manager
+      const businessPagesPromise = this.getBusinessPages(accessToken);
+
+      const [directPages, businessPages] = await Promise.all([
+        directPagesPromise,
+        businessPagesPromise
+      ]);
+
+      // 3. Combina e remove duplicatas por ID
+      const allPages = [...(directPages || []), ...(businessPages || [])];
+      const uniquePages = Array.from(new Map(allPages.map(item => [item.id, item])).values());
+
+      return uniquePages;
     } catch (error) {
-      console.error('Erro ao obter páginas:', error.response?.data || error.message);
+      console.error('Erro ao consolidar lista de páginas:', error.response?.data || error.message);
       throw new Error('Falha ao listar páginas');
     }
   }
