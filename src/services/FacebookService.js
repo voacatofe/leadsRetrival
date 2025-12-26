@@ -139,6 +139,27 @@ class FacebookService {
       throw new Error('Falha ao obter detalhes do lead');
     }
   }
+
+  /**
+   * Obtém os formulários de cadastro (Lead Gen Forms) de uma página.
+   * @param {string} pageId
+   * @param {string} pageAccessToken
+   * @returns {Promise<Array>}
+   */
+  async getPageForms(pageId, pageAccessToken) {
+    try {
+      const response = await axios.get(`${BASE_URL}/${pageId}/leadgen_forms`, {
+        params: {
+          access_token: pageAccessToken,
+          fields: 'id,name,status,leadgen_export_csv_url,locale,created_time',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error(`Erro ao obter formulários da página ${pageId}:`, error.response?.data || error.message);
+      throw new Error('Falha ao obter formulários da página');
+    }
+  }
 }
 
 export default new FacebookService();

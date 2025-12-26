@@ -125,6 +125,40 @@ class AuthController {
       res.status(500).json({ error: 'Failed to connect page' });
     }
   }
+
+  /**
+   * Lista os formulários de leads de uma página conectada.
+   * Params: :pageId
+   */
+  async getPageForms(req, res) {
+    try {
+      const { pageId } = req.params;
+      const userId = req.user.id;
+
+      // Busca a página no banco garantindo que pertence ao usuário
+      const page = await Page.findOne({
+        where: {
+          page_id: pageId,
+          user_id: userId
+        }
+      });
+
+      if (!page) {
+        return res.status(404).json({ error: 'Page not found or not connected to this user' });
+      }
+
+      const forms = await FacebookService.getPageForms(pageId, page.access_token);
+      
+      res.json({
+        success: true,
+        forms
+      });
+
+    } catch (error) {
+      console.error('Get Page Forms Error:', error);
+      res.status(500).json({ error: 'Failed to fetch page forms' });
+    }
+  }
 }
 
 export default new AuthController();

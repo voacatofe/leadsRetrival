@@ -176,63 +176,105 @@ function renderProfile(user) {
     document.getElementById('status').innerHTML = profileContent;
 }
 
+// Armazena o token globalmente para reuso nas chamadas
+let CURRENT_USER_TOKEN = null;
+
 async function fetchPages(accessToken) {
+    CURRENT_USER_TOKEN = accessToken;
     try {
-        // Updated to fetch leads from local DB as per instructions
-        const res = await fetch(`/api/leads`);
+        const res = await fetch('/auth/pages', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
         const data = await res.json();
 
-        if (Array.isArray(data) && data.length > 0) {
-            let html = `<h4>Stored Leads:</h4><div class="pages-list">`;
-            data.forEach(lead => {
-                html += `
-                    <div class="page-item">
-                        <strong>${lead.full_name || 'Lead'}</strong><br>
-                        <small>${lead.email || 'No Email'}</small><br>
-                        <small>ID: ${lead.id}</small>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            document.getElementById('pages-container').innerHTML = html;
+        if (data.pages && data.pages.length > 0) {
+            renderPagesList(data.pages);
         } else {
-            document.getElementById('pages-container').innerHTML = '<p>No leads found in database.</p>';
+            document.getElementById('pages-container').innerHTML = '<p>No pages found for this user.</p>';
         }
     } catch (e) {
-        document.getElementById('pages-container').innerHTML = `<p style="color:red">Failed to load leads: ${e.message}</p>`;
+        document.getElementById('pages-container').innerHTML = `<p style="color:red">Failed to load pages: ${e.message}</p>`;
     }
 }
 
-// Kept for reference but likely unused if we only show local leads
-async function fetchLeads(pageToken, pageId, pageName) {
-    document.getElementById('pages-container').innerHTML = `<h4>Loading forms for ${pageName}...</h4>`;
+function renderPagesList(pages) {
+    let html = `<h4>Your Pages:</h4><div class="pages-list">`;
+    pages.forEach(page => {
+        html += `
+            <div class="page-item">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${page.name}</strong><br>
+                        <small>ID: ${page.id}</small>
+                    </div>
+                    <div>
+                         <button class="btn" style="padding:5px 10px; font-size:0.8rem; width:auto; margin-top:0;"
+                            onclick="loadForms('${page.id}', '${page.name.replace(/'/g, "\\'")}')">
+                            Ver Formulários
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    document.getElementById('pages-container').innerHTML = html;
+}
+
+async function loadForms(pageId, pageName) {
+    if (!CURRENT_USER_TOKEN) {
+        alert("Erro: Token de usuário não encontrado. Faça login novamente.");
+        return;
+    }
+
+    const container = document.getElementById('pages-container');
+    container.innerHTML = `<h4>Loading forms for ${pageName}...</h4>`;
 
     try {
-        const res = await fetch(`/api/leads?page_token=${pageToken}&page_id=${pageId}`);
+        const res = await fetch(`/auth/pages/${pageId}/forms`, {
+            headers: {
+                'Authorization': `Bearer ${CURRENT_USER_TOKEN}`
+            }
+        });
         const data = await res.json();
 
-        // This endpoint returns LeadGen Forms
-        let html = `<h4>Lead Forms - ${pageName}</h4>`;
-        html += `<button class="btn" style="padding:5px 10px; font-size:0.8rem; margin-bottom:10px" onclick="location.reload()">Back</button>`;
+        let html = `<h4>Formulários - ${pageName}</h4>`;
+        html += `<button class="btn" style="padding:5px 10px; font-size:0.8rem; margin-bottom:10px; background: rgba(255,255,255,0.2);" onclick="fetchPages(CURRENT_USER_TOKEN)">← Voltar para Páginas</button>`;
+        html += `<div class="pages-list">`;
 
-        if (data.data && data.data.length > 0) {
-            data.data.forEach(form => {
+        if (data.forms && data.forms.data && data.forms.data.length > 0) {
+            data.forms.data.forEach(form => {
                 html += `
                     <div class="page-item" style="cursor: default;">
-                        <strong>${form.name}</strong> (${form.status})<br>
-                        <small>Leads Count: ${form.leads_count || 0}</small><br>
-                        <small>ID: ${form.id}</small>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong>${form.name}</strong> <span style="font-size:0.8em; opacity:0.7">(${form.status})</span><br>
+                                <small>Leads: ${form.leads_count || 0}</small><br>
+                                <small>ID: ${form.id}</small>
+                            </div>
+                            <button class="btn" style="padding:4px 8px; font-size:0.7rem; width:auto; margin-top:0;"
+                                onclick="console.log('Formulário selecionado:', '${form.id}')">
+                                Selecionar
+                            </button>
+                        </div>
                     </div>
                 `;
             });
         } else {
-            html += '<p>No lead forms found.</p>';
+            html += '<p>Nenhum formulário de leads encontrado nesta página.</p>';
         }
-
-        document.getElementById('pages-container').innerHTML = html;
+        
+        html += `</div>`;
+        container.innerHTML = html;
 
     } catch (e) {
-        alert("Error fetching leads: " + e.message);
+        console.error(e);
+        container.innerHTML = `
+            <p style="color:red">Erro ao carregar formulários: ${e.message}</p>
+            <button class="btn" onclick="fetchPages(CURRENT_USER_TOKEN)">Voltar</button>
+        `;
     }
 }
 
@@ -297,4 +339,5 @@ function customLogout() {
 window.customLogin = customLogin;
 window.customLogout = customLogout;
 window.checkLoginState = checkLoginState;
-window.fetchLeads = fetchLeads;
+window.loadForms = loadForms;
+window.fetchPages = fetchPages;

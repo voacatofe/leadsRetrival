@@ -117,17 +117,19 @@ A nova infraestrutura requer as seguintes configurações adicionais:
 5.  **Troca de Token:** Implementar serviço para trocar *Short-Lived User Token* por *Long-Lived User Token*.
 6.  **Persistência:** Salvar usuário e token de longa duração no banco.
 
-### Fase 3: Gestão de Páginas
+### Fase 3: Gestão de Páginas e Formulários
 7.  **Listagem de Páginas:** Implementar rota que consulta `/me/accounts` (e lógica de Business Manager se necessário) usando o token do usuário.
 8.  **Obtenção de Token de Página:** Ao selecionar uma página, chamar endpoint específico para obter o *Page Access Token* (Perpétuo).
-9.  **Salvar Página:** Persistir dados da página e seu token no banco.
+9.  **Listagem de Formulários:** Criar endpoint `GET /pages/:pageId/forms` que utiliza o Token da Página para buscar os formulários de cadastro (`leadgen_forms`) na Graph API.
+10. **Frontend de Seleção:** Atualizar a interface para permitir que o usuário selecione a página e, em seguida, visualize e selecione os formulários desejados.
+11. **Salvar Configuração:** Persistir a página conectada e a lista de formulários selecionados (se aplicável) no banco.
 
-### Fase 4: Webhooks & Leads
-10. **Endpoint de Verificação:** Criar rota `GET /webhooks` para responder ao `hub.challenge`.
-11. **Subscrição:** Implementar chamada automática para `/{page-id}/subscribed_apps` logo após conectar uma página.
-12. **Processamento de Leads:** Criar rota `POST /webhooks` que:
+### Fase 4: Webhooks & Processamento de Leads (Fase 2 do Projeto)
+12. **Endpoint de Verificação:** Criar rota `GET /webhooks` para responder ao `hub.challenge`.
+13. **Subscrição:** Implementar chamada para `/{page-id}/subscribed_apps` para garantir o recebimento de eventos em tempo real.
+14. **Processamento de Leads:** Criar rota `POST /webhooks` que:
     *   Recebe o `leadgen_id`.
-    *   Busca o `page_access_token` no banco (baseado no `page_id` do payload).
+    *   Busca o `page_access_token` no banco.
     *   Chama a Graph API para baixar os detalhes do lead.
     *   Salva o lead no banco.
 
@@ -182,12 +184,18 @@ async function connectPage(userId, pageId) {
         access_token: pageData.access_token, // Este token não expira!
         user_id: userId
     });
+    
+    // NOTA: A subscrição de webhooks (subscribed_apps) será movida para uma etapa posterior ou
+    // executada automaticamente aqui, dependendo da estratégia de UX definida na Fase 4.
+}
 
-    // 4. (CRUCIAL) Inscrever o App na Página para receber Webhooks
-    await graphApi.post(`/${pageId}/subscribed_apps`, {
-        subscribed_fields: ['leadgen'],
-        access_token: pageData.access_token
+// Nova função para buscar formulários
+async function getPageForms(pageId, pageAccessToken) {
+    const forms = await graphApi.get(`/${pageId}/leadgen_forms`, {
+        access_token: pageAccessToken,
+        fields: 'id,name,status,locale'
     });
+    return forms;
 }
 ```
 

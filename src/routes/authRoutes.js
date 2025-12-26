@@ -24,4 +24,11 @@ router.get('/pages', authMiddleware, AuthController.getPages);
  */
 router.post('/pages/:pageId/connect', authMiddleware, AuthController.connectPage);
 
+/**
+ * @route GET /auth/pages/:pageId/forms
+ * @desc Lista os formulários de leads da página
+ * @access Private
+ */
+router.get('/pages/:pageId/forms', authMiddleware, AuthController.getPageForms);
+
 export default router;
