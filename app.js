@@ -80,7 +80,11 @@ async function statusChangeCallback(response) {
             const data = await res.json();
 
             if (data.error) {
-                throw new Error(data.error);
+                // Combine error and details for better debugging
+                const errorMsg = data.details
+                    ? `${data.error}: ${JSON.stringify(data.details)}`
+                    : data.error;
+                throw new Error(errorMsg);
             }
 
             // Success! We have the token in the backend/response.
@@ -95,7 +99,8 @@ async function statusChangeCallback(response) {
 
         } catch (error) {
             console.error(error);
-            document.getElementById('status').innerHTML = `<p style="color:red">Error: ${error.message}</p> <button class="btn btn-logout" onclick="customLogout()">Try Again</button>`;
+            // Display the full error message in the UI
+            document.getElementById('status').innerHTML = `<p style="color:red; word-break: break-all;">Error: ${error.message}</p> <button class="btn btn-logout" onclick="customLogout()">Try Again</button>`;
         }
         return; // Stop here, we are handling the code flow.
     }
