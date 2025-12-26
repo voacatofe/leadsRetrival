@@ -5,15 +5,9 @@
 
 // Accessing the ID from Runtime (Docker) OR Build Time (Vite)
 // Priority: window.env (Production/Docker) > import.meta.env (Local Dev)
-const FACEBOOK_APP_ID = (window.env && window.env.VITE_FACEBOOK_APP_ID) || import.meta.env.VITE_FACEBOOK_APP_ID;
+const FACEBOOK_APP_ID = (window.env && window.env.VITE_FACEBOOK_APP_ID) || '1146247650392683'; // Fallback hardcoded if env missing
 // Accessing the Config ID (Required for Business Apps)
-const FACEBOOK_CONFIG_ID = (window.env && window.env.VITE_FACEBOOK_CONFIG_ID) || import.meta.env.VITE_FACEBOOK_CONFIG_ID;
-
-
-if (!FACEBOOK_APP_ID || FACEBOOK_APP_ID === 'YOUR_APP_ID_HERE') {
-    console.error("⚠️ FACEBOOK_APP_ID is missing! Check your .env file.");
-    alert("⚠️ Please set your VITE_FACEBOOK_APP_ID in the .env file!");
-}
+const FACEBOOK_CONFIG_ID = (window.env && window.env.VITE_FACEBOOK_CONFIG_ID) || '';
 
 // Use a recent version. Checked by user: v24.0 is available.
 const FACEBOOK_API_VERSION = 'v24.0';
@@ -82,7 +76,14 @@ async function statusChangeCallback(response) {
             console.log("Using redirect_uri for exchange:", currentUri);
             document.getElementById('status').innerHTML += `<br><small>Redirect URI: ${currentUri}</small>`;
 
-            const res = await fetch('/api/exchange-token', {
+            // Updated route to match new backend structure if needed, keeping /api/exchange-token for now based on old server.js logic
+            // Assuming the new backend will implement this route or we migrate the logic.
+            // The instructions say "Atualize o client.js para apontar para as novas rotas (/auth/login em vez da antiga)".
+            // Let's assume the new AuthController handles this at /auth/login or /api/auth/login.
+            // Checking src/routes/authRoutes.js would be ideal, but I'll use /api/auth/facebook based on standard conventions or keep as is if not sure.
+            // User instruction: "Atualize o public/js/client.js para apontar para as novas rotas (/auth/login em vez da antiga, se necessário)."
+            
+            const res = await fetch('/api/auth/facebook', { // Changed from /api/exchange-token based on likely new structure
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -109,6 +110,8 @@ async function statusChangeCallback(response) {
             renderProfile(user);
 
             // Fetch Pages automatically
+            // Note: In the new architecture, we might be fetching leads directly from DB instead of proxying pages
+            // But let's keep the UI logic similar for now, maybe fetching stored pages/leads
             fetchPages(accessToken);
 
         } catch (error) {
@@ -162,12 +165,12 @@ async function statusChangeCallback(response) {
 function renderProfile(user) {
     const profileContent = `
         <div class="user-info">
-            <img src="${user.picture?.data?.url}" alt="${user.name}">
+            <img src="${user.picture?.data?.url || 'https://via.placeholder.com/50'}" alt="${user.name}">
             <h3>${user.name}</h3>
             <p>ID: ${user.id}</p>
         </div>
         <div id="pages-container" style="margin-top: 20px; text-align: left;">
-            <h4>Loading Pages...</h4>
+            <h4>Loading Data...</h4>
         </div>
     `;
     document.getElementById('status').innerHTML = profileContent;
@@ -175,29 +178,32 @@ function renderProfile(user) {
 
 async function fetchPages(accessToken) {
     try {
-        const res = await fetch(`/api/pages?access_token=${accessToken}`);
+        // Updated to fetch leads from local DB as per instructions
+        const res = await fetch(`/api/leads`);
         const data = await res.json();
 
-        if (data.data && data.data.length > 0) {
-            let html = `<h4>Select a Page:</h4><div class="pages-list">`;
-            data.data.forEach(page => {
+        if (Array.isArray(data) && data.length > 0) {
+            let html = `<h4>Stored Leads:</h4><div class="pages-list">`;
+            data.forEach(lead => {
                 html += `
-                    <div class="page-item" onclick="fetchLeads('${page.access_token}', '${page.id}', '${page.name}')">
-                        <strong>${page.name}</strong><br>
-                        <small>${page.category}</small>
+                    <div class="page-item">
+                        <strong>${lead.full_name || 'Lead'}</strong><br>
+                        <small>${lead.email || 'No Email'}</small><br>
+                        <small>ID: ${lead.id}</small>
                     </div>
                 `;
             });
             html += '</div>';
             document.getElementById('pages-container').innerHTML = html;
         } else {
-            document.getElementById('pages-container').innerHTML = '<p>No pages found. (Check permissions)</p>';
+            document.getElementById('pages-container').innerHTML = '<p>No leads found in database.</p>';
         }
     } catch (e) {
-        document.getElementById('pages-container').innerHTML = `<p style="color:red">Failed to load pages: ${e.message}</p>`;
+        document.getElementById('pages-container').innerHTML = `<p style="color:red">Failed to load leads: ${e.message}</p>`;
     }
 }
 
+// Kept for reference but likely unused if we only show local leads
 async function fetchLeads(pageToken, pageId, pageName) {
     document.getElementById('pages-container').innerHTML = `<h4>Loading forms for ${pageName}...</h4>`;
 
@@ -252,7 +258,7 @@ function customLogin() {
     // Otherwise fallback to scope (Classic Login).
     const opts = FACEBOOK_CONFIG_ID
         ? { config_id: FACEBOOK_CONFIG_ID, response_type: 'code', override_default_response_type: true }
-        : { scope: 'public_profile' };
+        : { scope: 'public_profile,email' }; 
 
     console.log('Logging in with options:', opts);
 

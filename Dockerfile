@@ -1,32 +1,38 @@
 # Build Stage
 FROM node:20-alpine as builder
+
 WORKDIR /app
+
 COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
 RUN npm install
+
 COPY . .
-# Vite build puts files in /dist
-RUN npm run build 
+
+# Build frontend (Vite)
+RUN npm run build
 
 # Production Stage
 FROM node:20-alpine
+
 WORKDIR /app
+
+# Install only production dependencies
 COPY package*.json ./
-RUN npm install --production
+RUN npm install --production && npm cache clean --force
 
-# Copy backend files
-COPY server.js .
+# Copy backend source code
+COPY . .
 
-# Copy frontend build from builder
+# Copy frontend build from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Copy entrypoint (optional, if we still need runtime injection for frontend)
-# Since we are now serving from Node, we can inject variables differently or keep the script.
-# For simplicity, let's keep the script pattern if we want window.env, 
-# OR we can serve a dynamic /env-config.js endpoint from Express!
-# Let's switch to the Express endpoint approach, it's cleaner. 
-# But for now, standard environment variables passed to Node are enough for the Backend.
-# For the Frontend to see VITE_ vars, we still need the injection if we want runtime config.
-# Let's stick to standard node command for now and assume variables are present.
+# Add entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 3000
+
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server.js"]

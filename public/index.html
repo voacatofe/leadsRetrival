@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Leads</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <div class="glass-card">
+            <h1>Leads Manager</h1>
+            <p class="subtitle">Connect Facebook to view leads</p>
+
+            <!-- Login Section -->
+            <div id="login-section">
+                <!-- Custom Button -->
+                <button class="btn btn-facebook" onclick="customLogin()">
+                    <svg style="width:24px;height:24px;margin-right:10px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.15 5.96C15.21 5.96 16.16 6.05 16.16 6.05V8.51H15.03C13.79 8.51 13.4 9.28 13.4 10.06V12.06H16.17L15.73 14.96H13.4V21.96C18.19 21.21 21.85 17.06 21.85 12.06C21.85 6.53 17.35 2.04 12 2.04Z" />
+                    </svg>
+                    Continue with Facebook
+                </button>
+
+                <!-- Official Button (Hidden/Optional) -->
+                <div class="fb-btn-wrapper">
+                    <p style="margin-bottom:10px; font-size:0.8rem; opacity:0.6">Or use official button:</p>
+                    <div id="official-btn-container"></div>
+                </div>
+            </div>
+
+            <!-- Profile / Dashboard Section -->
+            <div id="profile-section" class="hidden">
+                <div id="status"></div>
+                <button class="btn btn-logout" onclick="customLogout()">Logout</button>
+            </div>
+            
+            <div id="app"></div>
+        </div>
+    </div>
+
+    <!-- Env Config -->
+    <script src="/env-config.js"></script>
+    <!-- App Logic -->
+    <script src="/js/client.js"></script>
+</body>
+</html>
