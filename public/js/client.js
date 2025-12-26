@@ -82,8 +82,9 @@ async function statusChangeCallback(response) {
             // Let's assume the new AuthController handles this at /auth/login or /api/auth/login.
             // Checking src/routes/authRoutes.js would be ideal, but I'll use /api/auth/facebook based on standard conventions or keep as is if not sure.
             // User instruction: "Atualize o public/js/client.js para apontar para as novas rotas (/auth/login em vez da antiga, se necessário)."
-            
-            const res = await fetch('/api/auth/facebook', { // Changed from /api/exchange-token based on likely new structure
+
+            // Updated route to match backend structure
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -104,14 +105,12 @@ async function statusChangeCallback(response) {
 
             // Success! We have the token in the backend/response.
             const user = data.user;
-            const accessToken = data.access_token;
+            const accessToken = data.access_token; // Backend must return this!
 
             // Show User Profile
             renderProfile(user);
 
             // Fetch Pages automatically
-            // Note: In the new architecture, we might be fetching leads directly from DB instead of proxying pages
-            // But let's keep the UI logic similar for now, maybe fetching stored pages/leads
             fetchPages(accessToken);
 
         } catch (error) {
@@ -265,7 +264,7 @@ async function loadForms(pageId, pageName) {
         } else {
             html += '<p>Nenhum formulário de leads encontrado nesta página.</p>';
         }
-        
+
         html += `</div>`;
         container.innerHTML = html;
 

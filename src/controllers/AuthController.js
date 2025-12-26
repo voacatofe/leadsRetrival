@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Page from '../models/Page.js';
 
 class AuthController {
-  
+
   /**
    * Recebe o short-lived token do frontend, troca por long-lived, 
    * obtém dados do usuário e salva/atualiza no banco.
@@ -19,7 +19,7 @@ class AuthController {
       // 1. Troca o token por um de longa duração
       const tokenData = await FacebookService.exchangeShortLivedToken(accessToken);
       const longLivedToken = tokenData.access_token;
-      
+
       // Calcula data de expiração (geralmente 60 dias)
       const expiresInSeconds = tokenData.expires_in || 5184000; // default 60 dias se não vier
       const tokenExpiresAt = new Date();
@@ -31,7 +31,7 @@ class AuthController {
       // 3. Salva ou atualiza usuário no banco
       // upsert retorna um array [instance, created] (dependendo do dialeto, no Postgres é assim)
       // Mas para garantir compatibilidade simples, vamos usar findOne + update/create logic ou upsert direto.
-      
+
       const [user, created] = await User.upsert({
         facebook_id: userProfile.id,
         name: userProfile.name,
@@ -45,6 +45,7 @@ class AuthController {
       // Em uma app real, aqui você geraria seu próprio JWT da aplicação para autenticar rotas futuras
       res.json({
         success: true,
+        access_token: longLivedToken,
         user: {
           id: user.id,
           name: user.name,
@@ -73,14 +74,14 @@ class AuthController {
 
       console.log('[AuthController] Calling FacebookService.getPages...');
       const pages = await FacebookService.getPages(user.long_lived_token);
-      
+
       console.log(`[AuthController] FacebookService returned ${pages?.length} pages.`);
       res.json({ pages });
 
     } catch (error) {
       console.error('Get Pages Error:', error);
       if (error.response) {
-         console.error('[AuthController] Error Response Data:', JSON.stringify(error.response.data, null, 2));
+        console.error('[AuthController] Error Response Data:', JSON.stringify(error.response.data, null, 2));
       }
       res.status(500).json({ error: 'Failed to fetch pages' });
     }
@@ -106,10 +107,10 @@ class AuthController {
 
       // 2. Inscrever App nos Webhooks da Página
       const subscribed = await FacebookService.subscribeAppToPage(pageId, pageAccessToken);
-      
+
       if (!subscribed) {
-         // Opcional: decidir se falha totalmente ou apenas avisa
-         console.warn(`Warning: Could not subscribe to webhooks for page ${pageId}`);
+        // Opcional: decidir se falha totalmente ou apenas avisa
+        console.warn(`Warning: Could not subscribe to webhooks for page ${pageId}`);
       }
 
       // 3. Salvar Página no Banco
@@ -156,7 +157,7 @@ class AuthController {
       }
 
       const forms = await FacebookService.getPageForms(pageId, page.access_token);
-      
+
       res.json({
         success: true,
         forms
