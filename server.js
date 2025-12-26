@@ -32,7 +32,7 @@ app.use(express.static('dist'));
 
 // API Routes
 app.post('/api/exchange-token', async (req, res) => {
-    const { code } = req.body;
+    const { code, redirect_uri } = req.body;
 
     if (!code) {
         return res.status(400).json({ error: 'Code is required' });
@@ -41,15 +41,19 @@ app.post('/api/exchange-token', async (req, res) => {
     try {
         const appId = process.env.FACEBOOK_APP_ID || process.env.VITE_FACEBOOK_APP_ID;
         const appSecret = process.env.FACEBOOK_APP_SECRET;
-        const redirectUri = req.headers.referer || 'http://localhost:3000/'; // Must match the frontend origin exactly
+
+        // Use client-provided URI or fallback to referer
+        const fallbackUri = req.headers.referer ? req.headers.referer.split('?')[0] : 'http://localhost:3000/';
+        const finalRedirectUri = redirect_uri || fallbackUri;
 
         // 1. Exchange Code for Access Token
-        console.log('Exchanging code for token...');
+        console.log(`Exchanging code for token using redirect_uri: ${finalRedirectUri}`);
+
         const tokenResponse = await axios.get('https://graph.facebook.com/v24.0/oauth/access_token', {
             params: {
                 client_id: appId,
                 client_secret: appSecret,
-                redirect_uri: redirectUri.split('?')[0], // Remove query params from referer
+                redirect_uri: finalRedirectUri,
                 code: code
             }
         });

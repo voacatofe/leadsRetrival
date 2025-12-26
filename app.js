@@ -71,10 +71,16 @@ async function statusChangeCallback(response) {
 
         try {
             // Exchange Code
+            // IMPORTANT: The redirect_uri must match exactly what the SDK used (current page)
+            const currentUri = window.location.href.split('?')[0];
+
             const res = await fetch('/api/exchange-token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
+                body: JSON.stringify({
+                    code,
+                    redirect_uri: currentUri
+                })
             });
 
             const data = await res.json();
