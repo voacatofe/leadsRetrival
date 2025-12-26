@@ -31,7 +31,7 @@ window.fbAsyncInit = function () {
     // 3. Render Official Button with Config ID
     const btnContainer = document.getElementById('official-btn-container');
     if (btnContainer) {
-        const configAttr = FACEBOOK_CONFIG_ID ? `config_id="${FACEBOOK_CONFIG_ID}"` : 'scope="public_profile"';
+        const configAttr = FACEBOOK_CONFIG_ID ? `config_id="${FACEBOOK_CONFIG_ID}"` : 'scope="public_profile,email,pages_show_list,pages_read_engagement,leads_retrieval,pages_manage_ads"';
         btnContainer.innerHTML = `<fb:login-button ${configAttr} onlogin="checkLoginState();"></fb:login-button>`;
         // Reparse XFBML to render the button
         FB.XFBML.parse(btnContainer);
@@ -258,7 +258,7 @@ function customLogin() {
     // Otherwise fallback to scope (Classic Login).
     const opts = FACEBOOK_CONFIG_ID
         ? { config_id: FACEBOOK_CONFIG_ID, response_type: 'code', override_default_response_type: true }
-        : { scope: 'public_profile,email' }; 
+        : { scope: 'public_profile,email,pages_show_list,pages_read_engagement,leads_retrieval,pages_manage_ads' };
 
     console.log('Logging in with options:', opts);
 
