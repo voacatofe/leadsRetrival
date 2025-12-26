@@ -72,7 +72,9 @@ app.post('/api/exchange-token', async (req, res) => {
 
     } catch (error) {
         console.error('Error exchanging token:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to exchange token', details: error.response?.data });
+        // Include error.message in details if response data is missing (e.g. network/config errors)
+        const details = error.response?.data || { message: error.message };
+        res.status(500).json({ error: 'Failed to exchange token', details: details });
     }
 });
 
