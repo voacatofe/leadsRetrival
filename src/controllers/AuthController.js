@@ -62,18 +62,26 @@ class AuthController {
    * Lista páginas do usuário logado.
    */
   async getPages(req, res) {
+    console.log('[AuthController] getPages called. User ID:', req.user?.id);
     try {
       const user = req.user;
 
       if (!user.long_lived_token) {
+        console.warn('[AuthController] User has no long_lived_token');
         return res.status(401).json({ error: 'User has no Facebook token' });
       }
 
+      console.log('[AuthController] Calling FacebookService.getPages...');
       const pages = await FacebookService.getPages(user.long_lived_token);
+      
+      console.log(`[AuthController] FacebookService returned ${pages?.length} pages.`);
       res.json({ pages });
 
     } catch (error) {
       console.error('Get Pages Error:', error);
+      if (error.response) {
+         console.error('[AuthController] Error Response Data:', JSON.stringify(error.response.data, null, 2));
+      }
       res.status(500).json({ error: 'Failed to fetch pages' });
     }
   }
