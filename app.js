@@ -71,8 +71,16 @@ async function statusChangeCallback(response) {
 
         try {
             // Exchange Code
-            // IMPORTANT: The redirect_uri must match exactly what the SDK used (current page)
-            const currentUri = window.location.href.split('?')[0];
+            // IMPORTANT: The redirect_uri must match exactly what the SDK used.
+            // Diagnosis: Often there is a mismatch with trailing slashes.
+            // Strategy: We strip the trailing slash to be safer, as FB usually normalizes.
+            let currentUri = window.location.origin + window.location.pathname;
+            if (currentUri.endsWith('/') && currentUri.length > 1) {
+                currentUri = currentUri.slice(0, -1);
+            }
+
+            console.log("Using redirect_uri for exchange:", currentUri);
+            document.getElementById('status').innerHTML += `<br><small>Redirect URI: ${currentUri}</small>`;
 
             const res = await fetch('/api/exchange-token', {
                 method: 'POST',
