@@ -1,5 +1,5 @@
-const net = require('net');
-const url = require('url');
+import net from 'net';
+import { URL } from 'url';
 
 const MAX_RETRIES = 30;
 const RETRY_INTERVAL = 2000; // 2 seconds
@@ -7,7 +7,7 @@ const RETRY_INTERVAL = 2000; // 2 seconds
 function parseUrl(connectionString, defaultHost, defaultPort) {
     if (!connectionString) return { host: defaultHost, port: defaultPort };
     try {
-        const parsed = url.parse(connectionString);
+        const parsed = new URL(connectionString);
         return {
             host: parsed.hostname || defaultHost,
             port: parsed.port || defaultPort
