@@ -9,6 +9,10 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
+      - FACEBOOK_APP_ID
+      - FACEBOOK_APP_SECRET
+      - WEBHOOK_VERIFY_TOKEN
+      - APP_URL
     depends_on:
       - db
       - redis
